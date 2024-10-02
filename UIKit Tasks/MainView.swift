@@ -7,7 +7,17 @@
 
 import UIKit
 
-class MainView: UIView {
+protocol MainViewDelegat: AnyObject {
+    func changeBackgroundColor()
+}
+
+final class MainView: UIView {
+    
+    // MARK: - Properties
+    
+    weak var delegate: MainViewDelegat?
+    
+    // MARK: - UI
     
     let selfMainView: UIView = {
         let view = UIView()
@@ -63,7 +73,7 @@ class MainView: UIView {
             closureButton
         ].forEach {selfMainView.addSubview($0)}
         
-        
+        delegateButton.addTarget(self, action: #selector(tapDelegateButton), for: .touchUpInside)
         
         setConstraints()
     }
@@ -71,6 +81,15 @@ class MainView: UIView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    // MARK: - Actions
+    
+    @objc private func tapDelegateButton(_ sender: UIButton) {
+        print("tap")
+        delegate?.changeBackgroundColor()
+    }
+    
+//    MARK: Settings Constraints
     
     private func setConstraints() {
         NSLayoutConstraint.activate([
@@ -89,17 +108,23 @@ class MainView: UIView {
             
             closureButton.topAnchor.constraint(equalTo: responderButton.bottomAnchor, constant: 10),
             closureButton.leadingAnchor.constraint(equalTo: selfMainView.leadingAnchor, constant: 50),
-            closureButton.trailingAnchor.constraint(equalTo: selfMainView.trailingAnchor, constant: -50)        ])
+            closureButton.trailingAnchor.constraint(equalTo: selfMainView.trailingAnchor, constant: -50)        
+        ])
     }
 }
 
-extension MainView: UIGestureRecognizerDelegate {
+
+
+
+// MARK: - Extensions
+
+//extension MainView: UIGestureRecognizerDelegate {
     
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        if (touch.view == delegateButton) {
-            print("touch")
-            return true
-        }
-        return false
-    }
-}
+//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+//        if (touch.view == delegateButton) {
+//            print("touch")
+//            return true
+//        }
+//        return false
+//    }
+//}

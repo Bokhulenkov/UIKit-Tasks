@@ -9,9 +9,10 @@ import UIKit
 
 class RootView: UIView {
     
-    private let mainView: UIView = {
+    private let mainView: MainView = {
         let view = MainView()
-        return view.selfMainView
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
     }()
     
     private let rootView: UIView = {
@@ -38,6 +39,12 @@ class RootView: UIView {
         rootView.addSubview(mainView)
         setConstraints()
         
+    }
+    
+    // MARK: - Set Delegate
+    
+    func setDelegate(_ delegate: MainViewDelegat) {
+        mainView.delegate = delegate
     }
     
     
