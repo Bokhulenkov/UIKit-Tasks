@@ -7,24 +7,19 @@
 
 import UIKit
 
-protocol MainViewDelegat: AnyObject {
-    func changeBackgroundColor()
+protocol MainViewDelegate: AnyObject {
+    func changeColor()
 }
 
 final class MainView: UIView {
     
     // MARK: - Properties
     
-    weak var delegate: MainViewDelegat?
+    weak var delegate: MainViewDelegate?
+    
+    var mainViewClosure: (()->Void)?
     
     // MARK: - UI
-    
-    let selfMainView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .yellow
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
     
     private let delegateButton: UIButton = {
         let button = UIButton(type: .system)
@@ -65,15 +60,17 @@ final class MainView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        self.addSubview(selfMainView)
+        self.backgroundColor = .yellow
         
         [
             delegateButton,
             responderButton,
             closureButton
-        ].forEach {selfMainView.addSubview($0)}
+        ].forEach { addSubview($0) }
         
         delegateButton.addTarget(self, action: #selector(tapDelegateButton), for: .touchUpInside)
+        responderButton.addTarget(self, action: #selector(tapResponderChain), for: .touchUpInside)
+        closureButton.addTarget(self, action: #selector(tapClosureButton), for: .touchUpInside)
         
         setConstraints()
     }
@@ -84,47 +81,48 @@ final class MainView: UIView {
     
     // MARK: - Actions
     
-    @objc private func tapDelegateButton(_ sender: UIButton) {
-        print("tap")
-        delegate?.changeBackgroundColor()
+    @objc private func tapDelegateButton() {
+        delegate?.changeColor()
+    }
+    
+    @objc private func tapResponderChain(_ sender: UIButton) {
+        next?.perform(#selector(RootView.changeBackgroundColor))
+    }
+    
+    @objc private func tapClosureButton() {
+       mainViewClosure?()
     }
     
 //    MARK: Settings Constraints
     
     private func setConstraints() {
         NSLayoutConstraint.activate([
-            selfMainView.topAnchor.constraint(equalTo: self.topAnchor),
-            selfMainView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-            selfMainView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
-            selfMainView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
             
-            responderButton.trailingAnchor.constraint(equalTo: selfMainView.trailingAnchor, constant: -50),
-            responderButton.leadingAnchor.constraint(equalTo: selfMainView.leadingAnchor, constant: 50),
-            responderButton.centerYAnchor.constraint(equalTo: selfMainView.centerYAnchor),
+            responderButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
+            responderButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            responderButton.centerYAnchor.constraint(equalTo: self.centerYAnchor),
             
             delegateButton.bottomAnchor.constraint(equalTo: responderButton.topAnchor, constant: -10),
-            delegateButton.leadingAnchor.constraint(equalTo: selfMainView.leadingAnchor, constant: 50),
-            delegateButton.trailingAnchor.constraint(equalTo: selfMainView.trailingAnchor, constant: -50),
+            delegateButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            delegateButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
             
             closureButton.topAnchor.constraint(equalTo: responderButton.bottomAnchor, constant: 10),
-            closureButton.leadingAnchor.constraint(equalTo: selfMainView.leadingAnchor, constant: 50),
-            closureButton.trailingAnchor.constraint(equalTo: selfMainView.trailingAnchor, constant: -50)        
+            closureButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            closureButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20)
         ])
     }
 }
 
 
-
-
 // MARK: - Extensions
 
-//extension MainView: UIGestureRecognizerDelegate {
+extension MainView: UIGestureRecognizerDelegate {
     
-//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-//        if (touch.view == delegateButton) {
-//            print("touch")
-//            return true
-//        }
-//        return false
-//    }
-//}
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if (touch.view == responderButton) {
+            print("touch")
+            return true
+        }
+        return false
+    }
+}

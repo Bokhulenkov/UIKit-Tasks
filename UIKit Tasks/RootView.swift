@@ -7,17 +7,24 @@
 
 import UIKit
 
-class RootView: UIView {
+protocol RootViewDelegate: AnyObject {
+    func changeBackgroundColorVC(_ color: UIColor?)
+}
+
+final class RootView: UIView, MainViewDelegate {
+    
+    // MARK: - Properties
+    
+    weak var delegate: RootViewDelegate?
+    
+    private let delegateColorVC = UIColor.blue
+    
+    var rootViewClosure: (()->Void)?
+    
+    
     
     private let mainView: MainView = {
         let view = MainView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    private let rootView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .green
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -27,38 +34,43 @@ class RootView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        self.addSubview(rootView)
-        rootView.addSubview(mainView)
+        self.backgroundColor = .green
+        self.addSubview(mainView)
+        
+        mainView.delegate = self
+        
+//        closure
+        mainView.mainViewClosure = { [weak self] in
+            self?.rootViewClosure?()
+        }
+        
         setConstraints()
     }
     
     required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        
-        self.addSubview(rootView)
-        rootView.addSubview(mainView)
-        setConstraints()
-        
+        fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: - Set Delegate
-    
-    func setDelegate(_ delegate: MainViewDelegat) {
-        mainView.delegate = delegate
+    func changeColor() {
+        delegate?.changeBackgroundColorVC(delegateColorVC)
     }
     
+    override var next: UIResponder? {
+        return superview
+    }
+    
+    @objc func changeBackgroundColor() {
+        next?.next?.perform(#selector(ViewController.changeBackgroundColor))
+    }
+    
+    // MARK: - Constraints
     
     private func setConstraints() {
         NSLayoutConstraint.activate([
-            rootView.topAnchor.constraint(equalTo: self.topAnchor, constant: 20),
-            rootView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -20),
-            rootView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
-            rootView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
-            
-            mainView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor, constant: 30),
-            mainView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor, constant: -30),
-            mainView.topAnchor.constraint(equalTo: rootView.topAnchor, constant: 60),
-            mainView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor, constant: -60)
+            mainView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 40),
+            mainView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -40),
+            mainView.topAnchor.constraint(equalTo: self.topAnchor, constant: 70),
+            mainView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -70)
         ])
     }
 
